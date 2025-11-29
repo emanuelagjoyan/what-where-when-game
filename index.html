@@ -30,3 +30,411 @@
         <button id="nextBtn" class="next-btn" onclick="nextQuestion()" style="display: none;">Հաջորդ հարցը</button>
     </div>
 </div>
+:root {
+    --bg-color: #1a1a2e;
+    --card-color: #16213e;
+    --text-color: #e94560;
+    --accent-color: #0f3460;
+    --white: #ffffff;
+    --green: #2ecc71;
+    --red: #e74c3c;
+    --yellow: #f1c40f;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--white);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+.game-container {
+    width: 90%;
+    max-width: 800px;
+    background-color: var(--card-color);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    transition: background-color 0.5s ease;
+    border: 2px solid var(--accent-color);
+}
+
+.game-container.alarm {
+    background-color: #580000;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+    70% { box-shadow: 0 0 20px 20px rgba(231, 76, 60, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--accent-color);
+    padding-bottom: 15px;
+}
+
+.header h1 {
+    margin: 0 0 15px 0;
+    font-size: 1.8em;
+}
+
+.score-board {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 1.2em;
+    font-weight: bold;
+    background: rgba(0,0,0,0.2);
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.score-item.expert { color: var(--green); }
+.score-item.viewer { color: var(--red); }
+
+.timer-section {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.status-text {
+    font-size: 1.2em;
+    margin-bottom: 5px;
+    color: var(--yellow);
+    font-weight: bold;
+}
+
+.timer-bar {
+    width: 100%;
+    height: 10px;
+    background-color: #333;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.progress {
+    height: 100%;
+    width: 100%;
+    background-color: var(--green);
+    transition: width 1s linear, background-color 1s ease;
+}
+
+.timer-number {
+    font-size: 1.5em;
+    font-family: monospace;
+}
+
+.question-box {
+    font-size: 1.3em;
+    line-height: 1.6;
+    margin-bottom: 30px;
+    min-height: 100px;
+}
+
+.input-area {
+    display: flex;
+    gap: 10px;
+}
+
+input {
+    flex: 1;
+    padding: 15px;
+    font-size: 1.1em;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+}
+
+button {
+    padding: 15px 30px;
+    font-size: 1.1em;
+    background-color: var(--text-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+button:hover {
+    transform: scale(1.05);
+}
+
+.feedback {
+    margin-top: 20px;
+    font-size: 1.2em;
+    font-weight: bold;
+    text-align: center;
+    min-height: 30px;
+}
+
+.next-btn {
+    width: 100%;
+    background-color: var(--green);
+    margin-top: 20px;
+}
+
+.disabled {
+    pointer-events: none;
+    opacity: 0.6;
+}
+// Հարցերի բազա (Թարմացված ձեր պատասխաններով)
+const quizData = [
+    {
+        question: "Եթե ուզում ես հպարտանալ, հպարտացիր իտալերեն։ Եթե ուզում ես հրամայել, հրամայիր գերմաներեն։ Եթե ուզում ես սեր խոստովանել, խոստովանիր ֆրանսերեն։ Եթե ուզում ես հայհոյել, հայհոյիր թուրքերեն։ Եթե ուզում ես արևելքն զգալ, կարդա պարսկերեն։ Իսկ եթե ուզում ես աղոթել․․ Ըստ Բայրոնի ո՞ր լեզվով պետք է աղոթել Աստծուն լսելի լինելու համար։",
+        keywords: ["հայերեն", "հայերենով", "հայոց"],
+        answerText: "Հայերեն"
+    },
+    {
+        question: "Ի՞նչ է միավորում Քրիստափոր Կոլումբոսին, Սիմոն Բոլիվարին, Իսպանիայի թագավոր Ֆիլիպ 2-րդին ու Սուրբ Մարինին։",
+        keywords: ["երկիր", "պետություն", "պետություններ", "երկրներ"],
+        answerText: "Իրենց անունով պետություններ կան (Կոլումբիա, Բոլիվիա, Ֆիլիպիններ, Սան Մարինո)"
+    },
+    {
+        question: "Կարծում եմ բոլորի համար էլ վիրավորական կլինի, եթե նրան համեմատեն կենդանու հետ, սակայն վերջերս տարածված նորարարությունից ելնելով այդ ընտանի կենդանու հետ համեմատվելը ոչ միայն վիրավորական չէ, այլ նաև պատվաբեր։ Նշեք այդ կենդանուն։",
+        keywords: ["այծ", "goat"],
+        answerText: "Այծ (GOAT - Greatest of All Time)"
+    },
+    {
+        question: "Նացիստական Գերմանիայի կողմից ԽՍՀՄ-ի վրա հարձակումը սկսվեց գաղտնի նշանաբառի փոխանցումով, որը իրենից ներկայացնում է գերմանական բնակավայր։ Ասացեք այդ գաղտնաբառը, եթե ասեմ, որ մեր համար այն շատ հաճելի էր լսելը հատկապես 2013-2016 թթ․։",
+        keywords: ["դորտմունդ", "դորդմունդ", "dortmund"],
+        answerText: "Դորտմունդ (Հենրիխ Մխիթարյանի խաղերի պատճառով)"
+    },
+    {
+        question: "Մի շարք հարցումների համաձայն՝ նա համարվում է այդ հնագույն ազգի պատմության ամենահայտնի դեմքը, սակայն շատերը սխալմամբ նրան լիովին այլ ազգի ներկայացուցիչ գիտեն։ Ո՞վ է նա։",
+        keywords: ["ալեքսանդր", "մակեդոնացի", "alexandr"],
+        answerText: "Ալեքսանդր Մակեդոնացի"
+    },
+    {
+        question: "Հնդկաստանից դեպի Եգիպտոս ուղևորվող նավերը ունեին բավականին մեծ չափեր, որը պայմանավորված էր յուրահատուկ «բեռի» փոխադրմամբ։ Ինչի՞ մասին է խոսքը։",
+        keywords: ["փիղ", "փղեր", "hox", "փիղը"],
+        answerText: "Փիղ"
+    },
+    {
+        question: "Որքան էլ տարօրինակ թվա, սակայն այս աշխարհահռչակ ընկերությունը ավելի շատ է անվադող արտադրում, քան «Միշլեն» և «Պիրելլի» ընկերությունները միասին վերցրած։ Ո՞րն է այդ ընկերությունը։",
+        keywords: ["լեգո", "lego"],
+        answerText: "Լեգո (Lego)"
+    },
+    {
+        question: "Մի հետաքննող լրագրող, ով ուսումնասիրում էր հայտնի նկարիչ Ամադեո Մոդիլիանիի վերագրվող նկարների իսկությունը, կատակելով հայտարարեց, որ որքան էլ տարօրինակ է, սակայն Մոդիլիանիի նկարների մեծ մասը նկարել է դրանից հետո։ Ի՞նչ նկատի ուներ լրագրողը։",
+        keywords: ["մահ", "մահից", "մահանալուց"],
+        answerText: "Մահ (նկարել է մահից հետո)"
+    },
+    {
+        question: "Երբ աշխարհի ամենահայտնի թանգարաններից մեկի ղեկավարին հարցրին, թե որն է իր թանգարանի ամենաթանկարժեք գանձը, նա պատասխանեց, որ դա այն դատարկ տեղն է թանգարանի պատին, որը մնացել է մի հայտնի գողությունից հետո։ Իսկ ի՞նչ էր գողացվել թանգարանից։",
+        keywords: ["մոնա լիզա", "ջոկոնդա", "mona lisa", "joconda"],
+        answerText: "Մոնա Լիզա (Ջոկոնդա)"
+    },
+    {
+        question: "Ֆրանսիացի Լուի Ռեյներն իր հայտնագործությամբ 19-րդ դարի կեսերին լուծեց մի մեծ խնդիր, որը հաճախ էր առաջանում տեքստ գրելիս։ Նա իր հայտնագործությանը տվեց հունական անուն, որը թարգմանվում է որպես «ուղղել»։ Ի՞նչ էր նա հայտնագործել։",
+        keywords: ["ռետին", "retin", "ջնջոց"],
+        answerText: "Ռետին"
+    },
+    {
+        question: "Հոդվածը, որը պատմում է, որ 63-ամյա Քիթ Ռիչարդսը մարմնավորելու է ծովահեն Ջեք Ճնճղուկի հորը, կրում է նույն անունը, ինչ որ ամերիկյան գրականության մի ստեղծագործություն։ Ո՞ր ստեղծագործության մասին է խոսքը։",
+        keywords: ["ծերունին և ծովը", "շերունին և ծովը", "ծերունին ու ծովը"],
+        answerText: "«Ծերունին և ծովը»"
+    },
+    {
+        question: "Սկսած ուշ միջնադարից՝ ասիական մի շարք երկրներում տարածվեցին յուրահատուկ կողմացույցեր, որոնք հյուսիսի փոխարեն ցույց էին տալիս դեպի այդ քաղաք տանող ճանապարհը։ Ո՞ր քաղաքի մասին է խոսքը։",
+        keywords: ["մեքքա", "մեկկա", "mecca"],
+        answerText: "Մեքքա"
+    },
+    {
+        question: "Դրանց մեծ թիվը նկարագրելու համար հունարենում և թուրքերենում օգտագործում են 40 թիվը, ռուսերենում՝ «բազմաթիվ» բառը։ Իսկ ի՞նչ թիվ են օգտագործում հայերենում և ինչի՞ մասին է խոսքը",
+        keywords: ["հազար", "հազարոտնուկ", "1000"],
+        answerText: "Հազար (Հազարոտնուկ)"
+    }
+];
+
+let currentQIndex = 0;
+let scoreExperts = 0;
+let scoreViewers = 0;
+let timerInterval;
+let phase = 'reading';
+
+const els = {
+    question: document.getElementById('questionText'),
+    input: document.getElementById('userAnswer'),
+    feedback: document.getElementById('feedback'),
+    nextBtn: document.getElementById('nextBtn'),
+    submitBtn: document.getElementById('submitBtn'),
+    scoreExperts: document.getElementById('scoreExperts'),
+    scoreViewers: document.getElementById('scoreViewers'),
+    status: document.getElementById('statusText'),
+    progress: document.getElementById('progress'),
+    timerNum: document.getElementById('timerNumber'),
+    container: document.getElementById('gameContainer'),
+    inputArea: document.getElementById('inputArea')
+};
+
+function initGame() {
+    loadQuestion();
+}
+
+function loadQuestion() {
+    if (currentQIndex >= quizData.length) {
+        endGame();
+        return;
+    }
+
+    const q = quizData[currentQIndex];
+    els.question.textContent = q.question;
+    els.input.value = '';
+    els.input.disabled = true;
+    els.feedback.textContent = '';
+    els.nextBtn.style.display = 'none';
+    els.submitBtn.style.display = 'block';
+    els.container.classList.remove('alarm');
+    els.inputArea.classList.add('disabled');
+    
+    startReadingPhase();
+}
+
+function startReadingPhase() {
+    phase = 'reading';
+    els.status.textContent = "Հարցը կարդացվում է...";
+    els.status.style.color = "#f1c40f";
+    els.progress.style.backgroundColor = "#f1c40f";
+    
+    let timeLeft = 15;
+    updateTimerUI(timeLeft, 15);
+
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerUI(timeLeft, 15);
+
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            startThinkingPhase();
+        }
+    }, 1000);
+}
+
+function startThinkingPhase() {
+    phase = 'thinking';
+    els.status.textContent = "Մտածելու ժամանակ...";
+    els.status.style.color = "#2ecc71";
+    els.progress.style.backgroundColor = "#2ecc71";
+    els.input.disabled = false;
+    els.inputArea.classList.remove('disabled');
+    els.input.focus();
+
+    let timeLeft = 60;
+    updateTimerUI(timeLeft, 60);
+
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerUI(timeLeft, 60);
+
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            startPanicPhase();
+        }
+    }, 1000);
+}
+
+function startPanicPhase() {
+    phase = 'panic';
+    els.status.textContent = "ՈՒՇԱԴՐՈՒԹՅՈՒՆ։ 10 վայրկյան պատասխանի համար";
+    els.status.style.color = "#e74c3c";
+    els.container.classList.add('alarm');
+    els.progress.style.backgroundColor = "#e74c3c";
+
+    let timeLeft = 10;
+    updateTimerUI(timeLeft, 10);
+
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerUI(timeLeft, 10);
+
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            handleTimeUp();
+        }
+    }, 1000);
+}
+
+function updateTimerUI(current, max) {
+    els.timerNum.textContent = `00:${current < 10 ? '0' + current : current}`;
+    const percent = (current / max) * 100;
+    els.progress.style.width = `${percent}%`;
+}
+
+function handleTimeUp() {
+    els.input.disabled = true;
+    checkAnswer(true); // Ժամանակը սպառվեց, ստուգում ենք
+}
+
+function checkAnswer(forced = false) {
+    if (els.nextBtn.style.display === 'block') return; // Եթե արդեն ստուգված է, չկրկնել
+
+    clearInterval(timerInterval);
+    els.container.classList.remove('alarm');
+    els.input.disabled = true;
+    els.submitBtn.style.display = 'none'; // Թաքցնել պատասխանել կոճակը
+
+    const userVal = els.input.value.trim().toLowerCase();
+    const currentQ = quizData[currentQIndex];
+    
+    // Ստուգում ենք՝ արդյոք պատասխանը պարունակում է բանալի բառերից մեկը
+    const isCorrect = currentQ.keywords.some(keyword => userVal.includes(keyword));
+
+    if (isCorrect && userVal.length > 0) {
+        // ՃԻՇՏ ՊԱՏԱՍԽԱՆԻ ԴԵՊՔՈՒՄ
+        scoreExperts++;
+        els.scoreExperts.textContent = scoreExperts;
+        
+        els.feedback.innerHTML = "ՃԻՇՏ Է";
+        els.feedback.style.color = "#2ecc71";
+        
+        // 1.5 վայրկյան հետո ավտոմատ անցում հաջորդին
+        setTimeout(() => {
+            nextQuestion();
+        }, 1500);
+
+    } else {
+        // ՍԽԱԼ ՊԱՏԱՍԽԱՆԻ ԴԵՊՔՈՒՄ
+        scoreViewers++;
+        els.scoreViewers.textContent = scoreViewers;
+        
+        els.feedback.innerHTML = `ՍԽԱԼ Է<br><span style="font-size:0.8em; color:white;">Ճիշտ պատասխանն է՝ </span> <span style="color:#f1c40f">${currentQ.answerText}</span>`;
+        els.feedback.style.color = "#e74c3c";
+        
+        // Ցույց տալ "Հաջորդ հարցը" կոճակը
+        els.nextBtn.style.display = 'block';
+    }
+}
+
+function nextQuestion() {
+    currentQIndex++;
+    loadQuestion();
+}
+
+function endGame() {
+    let winner = scoreExperts > scoreViewers ? "Հաղթեցին Գիտակները" : (scoreViewers > scoreExperts ? "Հաղթեցին Հանդիսատեսները" : "Ոչ ոքի");
+    let color = scoreExperts > scoreViewers ? "#2ecc71" : "#e74c3c";
+
+    els.container.innerHTML = `
+        <div class="header"><h1>Խաղի Ավարտ</h1></div>
+        <div style="text-align:center; padding: 30px;">
+            <h2 style="color:${color}">${winner}</h2>
+            <h3>Գիտակներ՝ ${scoreExperts} | Հանդիսատես՝ ${scoreViewers}</h3>
+            <button onclick="location.reload()" style="margin-top:20px;">Խաղալ կրկին</button>
+        </div>
+    `;
+}
+
+// Գործարկել խաղը
+initGame();
